@@ -38,21 +38,16 @@ CLASS_NAMES = [
     "tuna_tartare", "waffles"
 ]
 
-# Preprocessing
 from tensorflow.keras.applications.densenet import preprocess_input
-import numpy as np
-
-def preprocess(img):
-    # Pastikan 3 channel
+def preprocess_image(img: Image.Image):
     if img.mode != "RGB":
         img = img.convert("RGB")
-    target_size = tuple(model.input_shape[1:3])
+    target_size = (224, 224)  # sesuai DenseNet
     img = img.resize(target_size)
     img_array = np.asarray(img, dtype=np.float32)
     img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)
+    img_array = preprocess_input(img_array)  # pakai preprocessing DenseNet
     return img_array
-
 
 uploaded_file = st.file_uploader("Upload gambar makanan:", type=["jpg", "jpeg", "png"])
 
