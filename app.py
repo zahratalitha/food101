@@ -6,18 +6,21 @@ from huggingface_hub import hf_hub_download
 from tensorflow.keras.applications.densenet import preprocess_input
 
 # Judul
-st.title("🍔🥗🍣 Food-101 Image Classification")
+st.set_page_config(page_title="🍔🥗🍣 Food-101 Classification", page_icon="🍣")
+st.title("🍔🥗🍣 Food-101 Image Classification (DenseNet121)")
 
 # ===== Download & Load Model =====
-model_path = hf_hub_download(
-    repo_id="zahratalitha/101food",   # ganti sesuai repo kamu
-    filename="food101_best.h5"        # file model di repo
-)
+@st.cache_resource
+def load_model():
+    model_path = hf_hub_download(
+        repo_id="zahratalitha/101food",   # ganti sesuai repo HuggingFace
+        filename="food101_best.h5"        # file model di repo
+    )
+    model = tf.keras.models.load_model(model_path, compile=False)
+    return model
 
-# Load model tanpa compile
-model = tf.keras.models.load_model(model_path, compile=False)
+model = load_model()
 st.success("✅ Model berhasil dimuat")
-st.write("Input shape model:", model.input_shape)
 
 # ===== Daftar Kelas =====
 CLASS_NAMES = [
@@ -45,28 +48,30 @@ CLASS_NAMES = [
 
 # ===== Preprocessing Function =====
 def preprocess_image(img: Image.Image):
-    if img.mode != "RGB":
-        img = img.convert("RGB")
-    target_size = (224, 224)  # DenseNet default
+    img = img.convert("RGB")
+    target_size = (224, 224)  # DenseNet input
     img = img.resize(target_size)
     img_array = np.asarray(img, dtype=np.float32)
     img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)  # DenseNet preprocessing
-    return img_array
+    return preprocess_input(img_array)
 
-# ===== Streamlit Upload =====
-uploaded_file = st.file_uploader("Upload gambar makanan:", type=["jpg", "jpeg", "png"])
+# ===== Upload Gambar =====
+uploaded_file = st.file_uploader("📤 Upload gambar makanan:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Gambar yang diupload", use_column_width=True)
+    st.image(image, caption="📸 Gambar yang diupload", use_column_width=True)
 
-    input_img = preprocess_image(image)  # ✅ pakai fungsi yang benar
-    pred = model.predict(input_img)
+    with st.spinner("🔍 Sedang memproses..."):
+        try:
+            input_img = preprocess_image(image)
+            pred = model.predict(input_img, verbose=0)
 
-    class_idx = int(np.argmax(pred[0]))
-    label = CLASS_NAMES[class_idx]
-    confidence = float(np.max(pred[0]))
+            class_idx = int(np.argmax(pred[0]))
+            label = CLASS_NAMES[class_idx]
+            confidence = float(np.max(pred[0]))
 
-    st.subheader(f"🍽 Prediksi: {label.replace('_', ' ').title()}")
-    st.write(f"Confidence: {confidence:.2f}")
+            st.subheader(f"🍽 Prediksi: {label.replace('_', ' ').title()}")
+            st.write(f"Confidence: {confidence:.2f}")
+        except Exception as e:
+            st.error(f"❌ Error saat prediksi: {e}")
