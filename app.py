@@ -2,13 +2,14 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
+from tensorflow.keras.applications.densenet import preprocess_input
 from huggingface_hub import hf_hub_download
 
 st.title("🍔🥗🍣 Food-101 Image Classification")
 
 model_path = hf_hub_download(
-    repo_id="zahratalitha/101food",  # ganti dengan repo kamu
-    filename="food101_best.h5"           # atau .h5 kalau modelmu masih HDF5
+    repo_id="zahratalitha/101food",  
+    filename="food101_best.h5"           
 )
 model = tf.keras.models.load_model(model_path, compile=False)
 st.write("✅ Model berhasil dimuat")
@@ -38,13 +39,20 @@ CLASS_NAMES = [
 ]
 
 # Preprocessing
+from tensorflow.keras.applications.densenet import preprocess_input
+import numpy as np
+
 def preprocess(img):
+    # Pastikan 3 channel
     if img.mode != "RGB":
         img = img.convert("RGB")
     target_size = tuple(model.input_shape[1:3])
     img = img.resize(target_size)
-    img_array = np.asarray(img, dtype=np.float32) / 255.0
-    return np.expand_dims(img_array, axis=0)
+    img_array = np.asarray(img, dtype=np.float32)
+    img_array = np.expand_dims(img_array, axis=0)
+    img_array = preprocess_input(img_array)
+    return img_array
+
 
 uploaded_file = st.file_uploader("Upload gambar makanan:", type=["jpg", "jpeg", "png"])
 
