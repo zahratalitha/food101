@@ -2,19 +2,24 @@ import streamlit as st
 import tensorflow as tf
 import numpy as np
 from PIL import Image
-from tensorflow.keras.applications.densenet import preprocess_input
 from huggingface_hub import hf_hub_download
+from tensorflow.keras.applications.densenet import preprocess_input
 
+# Judul
 st.title("🍔🥗🍣 Food-101 Image Classification")
 
+# ===== Download & Load Model =====
 model_path = hf_hub_download(
-    repo_id="zahratalitha/101food",  
-    filename="food101_best.h5"           
+    repo_id="zahratalitha/101food",   # ganti sesuai repo kamu
+    filename="food101_best.h5"        # file model di repo
 )
+
+# Load model tanpa compile
 model = tf.keras.models.load_model(model_path, compile=False)
-st.write("✅ Model berhasil dimuat")
+st.success("✅ Model berhasil dimuat")
 st.write("Input shape model:", model.input_shape)
 
+# ===== Daftar Kelas =====
 CLASS_NAMES = [
     "apple_pie", "baby_back_ribs", "baklava", "beef_carpaccio", "beef_tartare",
     "beet_salad", "beignets", "bibimbap", "bread_pudding", "breakfast_burrito",
@@ -38,24 +43,25 @@ CLASS_NAMES = [
     "tuna_tartare", "waffles"
 ]
 
-from tensorflow.keras.applications.densenet import preprocess_input
+# ===== Preprocessing Function =====
 def preprocess_image(img: Image.Image):
     if img.mode != "RGB":
         img = img.convert("RGB")
-    target_size = (224, 224)  # sesuai DenseNet
+    target_size = (224, 224)  # DenseNet default
     img = img.resize(target_size)
     img_array = np.asarray(img, dtype=np.float32)
     img_array = np.expand_dims(img_array, axis=0)
-    img_array = preprocess_input(img_array)  # pakai preprocessing DenseNet
+    img_array = preprocess_input(img_array)  # DenseNet preprocessing
     return img_array
 
+# ===== Streamlit Upload =====
 uploaded_file = st.file_uploader("Upload gambar makanan:", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Gambar yang diupload", use_column_width=True)
 
-    input_img = preprocess(image)
+    input_img = preprocess_image(image)  # ✅ pakai fungsi yang benar
     pred = model.predict(input_img)
 
     class_idx = int(np.argmax(pred[0]))
