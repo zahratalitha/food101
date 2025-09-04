@@ -7,8 +7,8 @@ from huggingface_hub import hf_hub_download
 st.title("🍔🥗🍣 Food-101 Image Classification")
 
 model_path = hf_hub_download(
-    repo_id="username/food101-model",  # ganti dengan repo kamu
-    filename="food101.keras"           # atau .h5 kalau modelmu masih HDF5
+    repo_id="zahratalitha/101food",  # ganti dengan repo kamu
+    filename="food101_best.h5"           # atau .h5 kalau modelmu masih HDF5
 )
 model = tf.keras.models.load_model(model_path, compile=False)
 st.write("✅ Model berhasil dimuat")
